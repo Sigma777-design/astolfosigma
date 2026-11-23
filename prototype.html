@@ -19,7 +19,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
 body { background: var(--wall-b); color: var(--fg); font-family: var(--font-body); font-size: 15px; overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
