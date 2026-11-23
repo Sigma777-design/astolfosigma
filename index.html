@@ -1,0 +1,432 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>AstolfoSigma AI</title></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a night-desk scene — dark IDE-like ground, neon pink/cyan edges like the pitch deck; one live "companion window" as the hero */
+:root {
+  --bg: #13141b;
+  --surface: #1c1d27;
+  --surface-2: #242533;
+  --line: #34364a;
+  --fg: #eceaf4;
+  --muted: #a3a2b8;
+  --pink: #ff4f8b;
+  --cyan: #46e0dc;
+  --yellow: #ffd166;
+  --font-display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--cyan); }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 800; text-transform: uppercase; letter-spacing: .01em; }
+h2 .hl { color: var(--pink); }
+.eyebrow { font-family: var(--font-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); }
+.lead { color: var(--muted); max-width: 62ch; }
+section { padding-block: 72px; }
+.sec-head { display: grid; gap: 10px; margin-bottom: 32px; }
+
+/* header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
+.brand { font-family: var(--font-display); font-weight: 900; font-size: 1.1rem; letter-spacing: .02em; color: var(--fg); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--pink), #b04cff 55%, var(--cyan)); display: grid; place-items: center; font-size: .8rem; color: #13141b; font-weight: 900; }
+.brand b { color: var(--pink); }
+nav.links { display: flex; gap: 22px; }
+nav.links a { color: var(--muted); text-decoration: none; font-size: .92rem; }
+nav.links a:hover { color: var(--fg); }
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; font: 600 .95rem var(--font-body); padding: 12px 20px; border-radius: 12px; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+.btn-pink { background: var(--pink); color: #160912; box-shadow: 0 0 0 0 rgba(255,79,139,.0); }
+.btn-pink:hover { transform: translateY(-1px); box-shadow: 0 8px 28px -8px var(--pink); }
+.btn-ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.btn-ghost:hover { border-color: var(--cyan); }
+@media (max-width: 760px) { nav.links { display: none; } }
+
+/* hero */
+.hero { padding-block: 56px 72px; }
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+.hero .copy { display: grid; gap: 20px; min-width: 0; }
+.hero h1 { font-size: clamp(2.2rem, 5.4vw, 3.6rem); font-weight: 900; text-transform: uppercase; }
+.hero h1 .p { color: var(--pink); }
+.hero h1 .c { color: var(--cyan); }
+.hero .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.facts span::before { content: "▸ "; color: var(--cyan); }
+@media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; } }
+
+/* desktop mock */
+.desk { position: relative; border-radius: 16px; border: 1px solid var(--cyan); background: #0d0e14; box-shadow: 0 0 0 1px rgba(70,224,220,.15), 0 30px 80px -30px rgba(70,224,220,.35); overflow: hidden; min-width: 0; max-width: 100%; }
+.desk-bar { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #22232f; align-items: center; }
+.desk-bar i { width: 10px; height: 10px; border-radius: 50%; background: #3a3b4c; display: block; }
+.desk-bar small { margin-left: 10px; font-family: var(--font-mono); font-size: .72rem; color: #6f7089; }
+.code { padding: 16px 18px 120px; font-family: var(--font-mono); font-size: .78rem; line-height: 1.75; color: #8d8fa8; white-space: pre; overflow: hidden; }
+.code .k { color: #ff79c6; } .code .f { color: #8be9fd; } .code .s { color: #f1fa8c; } .code .n { color: #4b4d62; }
+.buddy { position: absolute; right: 14px; bottom: 14px; display: flex; align-items: flex-end; gap: 10px; }
+.bubble { background: var(--surface); border: 1px solid var(--cyan); color: var(--fg); padding: 10px 12px; border-radius: 12px 12px 2px 12px; font-size: .82rem; max-width: 210px; box-shadow: 0 0 24px -6px rgba(70,224,220,.6); }
+.bubble b { color: var(--cyan); }
+.avatar { width: 84px; height: 96px; flex: none; animation: bob 3.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+.timer-chip { position: absolute; left: 14px; bottom: 14px; font-family: var(--font-mono); font-size: .78rem; background: rgba(255,79,139,.12); color: var(--pink); border: 1px solid rgba(255,79,139,.5); padding: 6px 10px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+
+/* pains */
+.quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.quote { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 12px; align-content: start; }
+.quote p { margin: 0; font-size: 1.02rem; }
+.quote footer { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); }
+@media (max-width: 860px) { .quotes { grid-template-columns: 1fr; } }
+
+/* features */
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.feat { background: var(--surface); border-radius: 14px; padding: 22px; border: 1px solid var(--line); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.feat .ico { font-family: var(--font-mono); font-size: .75rem; color: var(--bg); background: var(--cyan); width: fit-content; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.feat:nth-child(even) .ico { background: var(--pink); }
+.feat h3 { font-size: 1.05rem; font-weight: 700; }
+.feat p { margin: 0; color: var(--muted); font-size: .94rem; }
+
+/* demo */
+.demo { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.panel h3 { font-size: 1.1rem; }
+.panel label { font-size: .85rem; color: var(--muted); display: grid; gap: 6px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.row > label { flex: 1 1 200px; }
+input, select { font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+input:focus, select:focus { border-color: var(--cyan); outline: none; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; border: 1px solid transparent; }
+.steps li.done { opacity: .55; text-decoration: line-through; }
+.steps input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--pink); }
+.steps .min { font-family: var(--font-mono); font-size: .75rem; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.say { background: rgba(70,224,220,.08); border: 1px solid rgba(70,224,220,.35); border-radius: 12px; padding: 12px 14px; font-size: .92rem; }
+.say b { color: var(--cyan); }
+.clock { font-family: var(--font-mono); font-size: clamp(2.6rem, 7vw, 3.6rem); font-weight: 600; text-align: center; color: var(--pink); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.bar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pink), var(--cyan)); transition: width .4s; }
+.xp { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { font-size: .8rem; color: var(--muted); margin: 0; }
+@media (max-width: 860px) { .demo { grid-template-columns: 1fr; } }
+
+/* pricing */
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.plan { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 10px; align-content: start; }
+.plan.main { border-color: var(--pink); box-shadow: 0 0 40px -18px var(--pink); }
+.plan h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; }
+.price { font-family: var(--font-display); font-size: 2rem; font-weight: 800; }
+.plan.main .price { color: var(--pink); }
+.price small { font-size: .9rem; color: var(--muted); font-weight: 600; }
+.plan ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: .94rem; display: grid; gap: 4px; }
+@media (max-width: 860px) { .plans { grid-template-columns: 1fr; } }
+
+/* roadmap */
+.road { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.road div { border: 1px dashed var(--line); border-radius: 12px; padding: 14px 16px; color: var(--muted); font-size: .93rem; }
+.road div b { display: block; color: var(--fg); font-family: var(--font-display); font-size: .95rem; margin-bottom: 2px; }
+
+/* final cta */
+.final { border-top: 1px solid var(--line); }
+.final .box { border: 1px solid var(--cyan); border-radius: 20px; padding: 36px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; background: radial-gradient(120% 140% at 100% 0%, rgba(255,79,139,.14), transparent 55%), var(--surface); }
+.final .box > div { display: grid; gap: 10px; min-width: 0; }
+@media (max-width: 760px) { .final .box { grid-template-columns: 1fr; padding: 24px; } }
+footer.site { padding-block: 28px 40px; color: var(--muted); font-size: .85rem; }
+footer.site .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="brand-mark">AΣ</span><span>Astolfo<b>Sigma</b> AI</span></a>
+    <nav class="links" aria-label="Розділи">
+      <a href="#pain">Проблема</a>
+      <a href="#mvp">Що вміє MVP</a>
+      <a href="#demo">Демо</a>
+      <a href="#price">Ціни</a>
+    </nav>
+    <a class="btn btn-pink" href="#beta">Хочу в бету</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="copy">
+        <span class="eyebrow">Десктопний ШІ-компаньйон · Windows · MVP</span>
+        <h1>Твій <span class="p">ШІ-напарник</span> для навчання <span class="c">без стресу</span></h1>
+        <p class="lead">Аніме-персонаж живе в кутку екрана поверх вікон: підтримує без осуду, ділить лабораторну на 15-хвилинні кроки й тримає з тобою фокус, поки ти кодиш або малюєш.</p>
+        <div class="cta">
+          <a class="btn btn-pink" href="prototype.html">Відкрити прототип</a>
+          <a class="btn btn-ghost" href="#demo">Спробувати демо</a>
+        </div>
+        <div class="facts"><span>Для студентів IT та дизайну 17–25 років</span><span>Free + Premium 199 грн/міс</span></div>
+      </div>
+
+      <div class="desk" aria-label="Приклад: персонаж на робочому столі поруч із редактором коду">
+        <div class="desk-bar"><i></i><i></i><i></i><small>lab_04 / main_process.py</small></div>
+<div class="code" aria-hidden="true"><span class="n">12</span>  <span class="k">class</span> <span class="f">ProjectStructure</span>:
+<span class="n">13</span>      <span class="k">def</span> <span class="f">fetch_data</span>(self):
+<span class="n">14</span>          data = api.get(<span class="s">"/students"</span>)
+<span class="n">15</span>          <span class="k">return</span> self.parse(data)
+<span class="n">16</span>
+<span class="n">17</span>      <span class="k">def</span> <span class="f">parse</span>(self, raw):
+<span class="n">18</span>          <span class="k">for</span> row <span class="k">in</span> raw:
+<span class="n">19</span>              <span class="n"># TODO: валідація</span>
+<span class="n">20</span>              yield row</div>
+        <span class="timer-chip" id="heroTimer">◷ 14:32 · фокус</span>
+        <div class="buddy">
+          <div class="bubble"><b>Чудовий темп!</b> Ще 15 хвилин фокусу, і пункт 2 з 4 закрито ✨</div>
+          <svg class="avatar" viewBox="0 0 84 96" aria-hidden="true">
+            <defs><linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c77dff"/><stop offset="1" stop-color="#ff4f8b"/></linearGradient></defs>
+            <path d="M18 30 L12 6 L32 20 Z" fill="url(#hair)"/>
+            <path d="M66 30 L72 6 L52 20 Z" fill="url(#hair)"/>
+            <circle cx="42" cy="42" r="26" fill="url(#hair)"/>
+            <ellipse cx="42" cy="47" rx="19" ry="18" fill="#ffe3e8"/>
+            <path d="M23 38 Q42 18 61 38 Q52 30 42 34 Q32 30 23 38 Z" fill="url(#hair)"/>
+            <ellipse cx="35" cy="48" rx="3.6" ry="4.6" fill="#2b1f3a"/>
+            <ellipse cx="49" cy="48" rx="3.6" ry="4.6" fill="#2b1f3a"/>
+            <circle cx="36.2" cy="46.4" r="1.2" fill="#fff"/><circle cx="50.2" cy="46.4" r="1.2" fill="#fff"/>
+            <ellipse cx="30" cy="55" rx="3" ry="1.6" fill="#ff9fb8"/><ellipse cx="54" cy="55" rx="3" ry="1.6" fill="#ff9fb8"/>
+            <path d="M38 57 Q42 60 46 57" stroke="#2b1f3a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            <path d="M24 70 Q42 62 60 70 L64 96 L20 96 Z" fill="#232436" stroke="#46e0dc" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pain">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Проблема</span>
+        <h2>Вигорання ховається <span class="hl">за монітором</span></h2>
+        <p class="lead">Студенти IT і дизайну проводять за ПК по 10–12 годин наодинці. Звичайні таск-менеджери лише тиснуть червоними дедлайнами. Ось що ми почули під час дослідження карт емпатії:</p>
+      </div>
+      <div class="quotes">
+        <article class="quote"><p>«Я знову прокрастиную і не можу змусити себе сісти за код чи макет».</p><footer>Студент 3 курсу, комп'ютерні науки</footer></article>
+        <article class="quote"><p>«Мені страшно не впоратися із сесією, відчуваю самотність за монітором».</p><footer>Узагальнена карта емпатії</footer></article>
+        <article class="quote"><p>«Чому всі ці навчальні програми такі сухі й нудні?»</p><footer>Студентка, цифровий дизайн</footer></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="mvp">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Що вміє MVP</span>
+        <h2>Мінімум функцій, <span class="hl">максимум підтримки</span></h2>
+        <p class="lead">Перша версія перевіряє одну гіпотезу: живий персонаж поруч допомагає довше тримати фокус і менше прокрастинувати.</p>
+      </div>
+      <div class="features">
+        <article class="feat"><span class="ico">LIVE2D</span><h3>Персонаж на робочому столі</h3><p>Один анімований Live2D-компаньйон у кутку екрана, поверх IDE, Figma чи браузера.</p></article>
+        <article class="feat"><span class="ico">EQ</span><h3>Емпатичний чат із ШІ</h3><p>Підтримує без осуду, пам'ятає контекст поточної сесії й не соромить за пропущені дедлайни.</p></article>
+        <article class="feat"><span class="ico">25:00</span><h3>Фокус-сесії</h3><p>Pomodoro-таймер, під час якого персонаж реагує на твій прогрес і м'яко повертає до задачі.</p></article>
+        <article class="feat"><span class="ico">15 ХВ</span><h3>Мікрокроки</h3><p>Велику лабу, курсову чи пет-проєкт ділить на кроки по 15 хвилин, з яких легко почати.</p></article>
+        <article class="feat"><span class="ico">MOOD</span><h3>Чек-ін настрою</h3><p>Коротке щоденне питання «як ти?», щоб помітити вигорання раніше, ніж воно накриє.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Демо прямо тут</span>
+        <h2>Розбий задачу <span class="hl">на мікрокроки</span></h2>
+        <p class="lead">Так працює базовий сценарій MVP. Впиши свою задачу, обери, скільки часу вона займе, і запусти фокус-сесію.</p>
+      </div>
+      <div class="demo">
+        <div class="panel">
+          <div class="row">
+            <label for="task">Задача
+              <input id="task" type="text" value="Лабораторна №4 з баз даних" maxlength="80">
+            </label>
+            <label for="hours" style="flex:0 1 150px">Скільки часу
+              <select id="hours">
+                <option value="1">≈ 1 година</option>
+                <option value="1.5" selected>≈ 1,5 години</option>
+                <option value="2">≈ 2 години</option>
+                <option value="3">≈ 3 години</option>
+              </select>
+            </label>
+            <button class="btn btn-pink" id="split" type="button">Розбити</button>
+          </div>
+          <ul class="steps" id="steps" aria-live="polite"></ul>
+          <div class="say" id="say"><b>Астольфо:</b> Почнемо з найпростішого кроку. Одна галочка, і далі піде легше.</div>
+        </div>
+        <div class="panel">
+          <h3>Фокус-сесія</h3>
+          <div class="clock" id="clock" aria-live="off">15:00</div>
+          <div class="row" style="justify-content:center">
+            <button class="btn btn-pink" id="startBtn" type="button">Старт</button>
+            <button class="btn btn-ghost" id="resetBtn" type="button">Скинути</button>
+          </div>
+          <div class="xp"><span id="lvl">Рівень 1</span><span id="xpText">0 / 100 XP</span></div>
+          <div class="bar" aria-hidden="true"><div id="xpBar"></div></div>
+          <p class="note">За кожен закритий крок персонаж дає 25 XP. Це демо: прогрес не зберігається.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="price">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Монетизація</span>
+        <h2>Безкоштовно почати, <span class="hl">преміум за бажанням</span></h2>
+      </div>
+      <div class="plans">
+        <article class="plan"><h3>Базовий</h3><div class="price">0 грн <small>/ міс</small></div><ul><li>Стандартний 2D-аватар</li><li>Текстовий чат і таймер</li><li>До 3 задач на день</li></ul></article>
+        <article class="plan main"><h3>Преміум</h3><div class="price">199 грн <small>/ міс</small></div><ul><li>Живий голос з емоційними інтонаціями</li><li>3D-моделі з кастомними реакціями</li><li>Безлімітна пам'ять та IDE-інтеграція</li></ul></article>
+        <article class="plan"><h3>Маркетплейс</h3><div class="price">80–250 грн</div><ul><li>Скіни, костюми та голоси</li><li>Контент від 2D/3D-художників</li><li>Платформа отримує 25% комісії</li></ul></article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Після валідації MVP</span>
+        <h2>Що <span class="hl">не входить</span> у першу версію</h2>
+        <p class="lead">Ці функції з'являться, коли перші користувачі підтвердять цінність базового сценарію.</p>
+      </div>
+      <div class="road">
+        <div><b>Голос</b>Голосове спілкування з персонажем</div>
+        <div><b>3D та пам'ять</b>Повноцінна 3D-модель і довготривала пам'ять</div>
+        <div><b>Маркетплейс</b>Кастомні скіни від художників</div>
+        <div><b>Інтеграції</b>Плагін для VS Code, Discord-кімнати</div>
+        <div><b>Мобільна версія</b>Компаньйон на телефоні</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" id="beta">
+    <div class="wrap">
+      <div class="box">
+        <div>
+          <span class="eyebrow">Бета-тест</span>
+          <h2>Шукаємо <span class="hl">перших 100 студентів</span></h2>
+          <p class="lead">Ти вчишся на IT чи дизайні, часто сидиш за ПК допізна й хочеш перевірити MVP першим? Напиши засновнику проєкту Іллі Ларіну: бета-тестери отримають Преміум безкоштовно на час тесту.</p>
+        </div>
+        <a class="btn btn-pink" href="prototype.html">Відкрити прототип</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>AstolfoSigma AI · навчальний стартап-проєкт, 2026</span>
+    <span>Засновник: Ілля Ларін</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var stepsEl = document.getElementById('steps');
+  var sayEl = document.getElementById('say');
+  var xp = 0, level = 1;
+
+  var templates = [
+    'Відкрити завдання й виписати, що саме треба здати',
+    'Підготувати середовище: файли, бібліотеки, шаблон',
+    'Зробити найпростішу частину, щоб розігрітися',
+    'Основна частина: перший блок',
+    'Основна частина: другий блок',
+    'Перевірити результат і виправити помилки',
+    'Оформити звіт або README',
+    'Фінальна перевірка та здача',
+    'Запас часу на непередбачене',
+    'Короткий огляд: що вийшло і що далі',
+    'Відпочинок: ти це заслужив',
+    'Зберегти все й закрити задачу'
+  ];
+  var cheers = [
+    'Чудовий старт! Перший крок завжди найважчий.',
+    'Так тримати, ти вже набрав темп.',
+    'Половина позаду, і без жодного червоного дедлайну.',
+    'Ти молодець. Зроби ковток води й рухайся далі.',
+    'Майже фініш! Я поруч.',
+    'Готово! Пишаюся тобою ✨'
+  ];
+
+  function addXp(n) {
+    xp += n;
+    while (xp >= 100) { xp -= 100; level += 1; }
+    document.getElementById('lvl').textContent = 'Рівень ' + level;
+    document.getElementById('xpText').textContent = xp + ' / 100 XP';
+    document.getElementById('xpBar').style.width = xp + '%';
+  }
+
+  function split() {
+    var task = document.getElementById('task').value.trim() || 'Моя задача';
+    var hours = parseFloat(document.getElementById('hours').value);
+    var count = Math.max(4, Math.round(hours * 60 / 15));
+    stepsEl.innerHTML = '';
+    for (var i = 0; i < count; i++) {
+      var li = document.createElement('li');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = 'step-' + i;
+      cb.setAttribute('aria-label', 'Крок ' + (i + 1));
+      var text = document.createElement('label');
+      text.htmlFor = cb.id;
+      text.textContent = templates[i % templates.length];
+      var min = document.createElement('span');
+      min.className = 'min';
+      min.textContent = (i * 15) + '–' + ((i + 1) * 15) + ' хв';
+      li.append(cb, text, min);
+      cb.addEventListener('change', onCheck);
+      stepsEl.appendChild(li);
+    }
+    sayEl.innerHTML = '<b>Астольфо:</b> «' + escapeHtml(task) + '» тепер ' + count + ' кроки по 15 хвилин. Почнемо з першого?';
+  }
+
+  function onCheck(e) {
+    var li = e.target.closest('li');
+    li.classList.toggle('done', e.target.checked);
+    var all = stepsEl.querySelectorAll('input');
+    var done = stepsEl.querySelectorAll('input:checked').length;
+    if (e.target.checked) addXp(25);
+    var idx = Math.min(cheers.length - 1, Math.floor(done / all.length * (cheers.length - 1)));
+    if (done === all.length) idx = cheers.length - 1;
+    sayEl.innerHTML = '<b>Астольфо:</b> ' + cheers[idx] + ' (' + done + ' з ' + all.length + ')';
+  }
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  document.getElementById('split').addEventListener('click', split);
+  split();
+
+  // focus timer
+  var total = 15 * 60, left = total, timer = null;
+  var clock = document.getElementById('clock');
+  var startBtn = document.getElementById('startBtn');
+  function draw() { var m = Math.floor(left / 60), s = left % 60; clock.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'); }
+  startBtn.addEventListener('click', function () {
+    if (timer) { clearInterval(timer); timer = null; startBtn.textContent = 'Продовжити'; return; }
+    startBtn.textContent = 'Пауза';
+    timer = setInterval(function () {
+      left -= 1; draw();
+      if (left <= 0) {
+        clearInterval(timer); timer = null; left = total; draw(); startBtn.textContent = 'Старт';
+        addXp(50);
+        sayEl.innerHTML = '<b>Астольфо:</b> 15 хвилин фокусу! +50 XP. Тепер 5 хвилин перерви.';
+      }
+    }, 1000);
+  });
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    clearInterval(timer); timer = null; left = total; draw(); startBtn.textContent = 'Старт';
+  });
+  draw();
+
+  // hero chip ticks for life
+  var heroLeft = 14 * 60 + 32, hero = document.getElementById('heroTimer');
+  setInterval(function () { heroLeft = heroLeft > 0 ? heroLeft - 1 : 15 * 60; hero.textContent = '◷ ' + String(Math.floor(heroLeft / 60)).padStart(2, '0') + ':' + String(heroLeft % 60).padStart(2, '0') + ' · фокус'; }, 1000);
+})();
+</script>
+</body></html>

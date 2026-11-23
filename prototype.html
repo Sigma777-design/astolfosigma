@@ -1,0 +1,595 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>AstolfoSigma AI — прототип</title></head><body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a fake Windows night desktop (wallpaper + IDE window + taskbar); the companion floats bottom-right on top of everything, its panels pop up beside it */
+:root {
+  --wall-a: #1a1033;
+  --wall-b: #0b1f2e;
+  --win: #15161f;
+  --win-2: #1e2030;
+  --line: #31334a;
+  --fg: #eeeaf7;
+  --muted: #9b9ab3;
+  --pink: #ff5c97;
+  --cyan: #4fe3de;
+  --violet: #b88cff;
+  --font-display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--wall-b); color: var(--fg); font-family: var(--font-body); font-size: 15px; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+.desktop { position: relative; height: 100%; overflow: hidden;
+  background:
+    radial-gradient(60% 50% at 80% 10%, rgba(255,92,151,.25), transparent 60%),
+    radial-gradient(50% 60% at 10% 90%, rgba(79,227,222,.18), transparent 60%),
+    linear-gradient(160deg, var(--wall-a), var(--wall-b)); }
+.stars { position: absolute; inset: 0; pointer-events: none; }
+
+/* proto banner */
+.proto { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 3; font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: rgba(10,10,18,.6); border: 1px solid var(--line); padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.proto b { color: var(--pink); }
+
+/* desktop icons */
+.icons { position: absolute; top: 16px; left: max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; z-index: 1; }
+.icon { width: 76px; display: grid; justify-items: center; gap: 4px; font-size: .72rem; color: #d8d6e6; text-align: center; text-shadow: 0 1px 2px #000; }
+.icon i { width: 38px; height: 38px; border-radius: 8px; display: block; }
+
+/* IDE window */
+.ide { position: absolute; top: 56px; left: 120px; right: 34%; bottom: 74px; background: var(--win); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 30px 60px -20px #000; display: grid; grid-template-rows: auto 1fr; overflow: hidden; z-index: 1; }
+.ide-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--win-2); border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-size: .75rem; color: var(--muted); }
+.ide-bar .dots { display: flex; gap: 6px; margin-left: auto; }
+.ide-bar .dots i { width: 11px; height: 11px; border-radius: 50%; background: #3a3c52; display: block; }
+.ide pre { margin: 0; padding: 16px; font-family: var(--font-mono); font-size: .8rem; line-height: 1.8; color: #8e90a8; overflow: hidden; }
+.ide .k { color: #ff79c6; } .ide .f { color: #8be9fd; } .ide .s { color: #f1fa8c; } .ide .c { color: #565874; }
+@media (max-width: 900px) { .ide { left: 16px; right: 16px; top: 52px; bottom: 300px; } .icons { display: none; } }
+
+/* taskbar */
+.taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 52px; padding-bottom: env(safe-area-inset-bottom, 0px); background: rgba(14,14,24,.85); backdrop-filter: blur(10px); border-top: 1px solid var(--line); display: flex; align-items: center; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); z-index: 4; }
+.tb-start { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, var(--pink), var(--violet), var(--cyan)); display: grid; place-items: center; font-weight: 900; font-family: var(--font-display); font-size: .75rem; color: #120a18; }
+.tb-app { height: 34px; padding: 0 12px; border-radius: 8px; background: rgba(255,255,255,.05); display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); border: 1px solid transparent; }
+.tb-app.on { border-color: var(--pink); color: var(--fg); }
+.tb-clock { margin-left: auto; font-family: var(--font-mono); font-size: .78rem; color: var(--muted); text-align: right; line-height: 1.2; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .tb-app.hide-sm { display: none; } }
+
+/* companion */
+.buddy { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); bottom: 64px; width: 210px; z-index: 6; touch-action: none; user-select: none; }
+.buddy svg { width: 210px; height: 250px; display: block; cursor: grab; filter: drop-shadow(0 14px 24px rgba(0,0,0,.55)) drop-shadow(0 0 18px rgba(255,92,151,.25)); }
+.buddy.dragging svg { cursor: grabbing; }
+.buddy .body-anim { animation: breathe 3.6s ease-in-out infinite; transform-origin: 105px 240px; }
+@keyframes breathe { 50% { transform: translateY(-3px) scale(1.01); } }
+.buddy.hop .body-anim { animation: hop .5s ease; }
+@keyframes hop { 30% { transform: translateY(-18px); } 60% { transform: translateY(0); } 80% { transform: translateY(-6px); } }
+.buddy .tail { animation: wag 2.4s ease-in-out infinite; transform-origin: 160px 220px; }
+@keyframes wag { 50% { transform: rotate(10deg); } }
+.blink { animation: blink 5s infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+.face { display: none; } .face.on { display: inline; }
+
+.bubble { position: absolute; right: 150px; bottom: 210px; width: 250px; background: var(--win); border: 1.5px solid var(--cyan); border-radius: 16px 16px 4px 16px; padding: 12px 14px; font-size: .88rem; line-height: 1.45; box-shadow: 0 0 30px -8px rgba(79,227,222,.6); z-index: 7; }
+.bubble .who { font-family: var(--font-display); font-weight: 800; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--pink); display: block; margin-bottom: 2px; }
+.bubble[hidden] { display: none; }
+
+.dock { position: absolute; right: 0; bottom: -6px; display: flex; gap: 6px; justify-content: flex-end; width: 100%; }
+.dock button { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: rgba(21,22,31,.92); display: grid; place-items: center; font-size: 1.05rem; transition: transform .12s, border-color .12s; }
+.dock button:hover { transform: translateY(-2px); border-color: var(--pink); }
+.dock button[aria-pressed="true"] { border-color: var(--cyan); background: rgba(79,227,222,.12); }
+
+/* panels */
+.panel { position: absolute; right: 250px; bottom: 64px; width: min(360px, calc(100vw - 32px)); max-height: calc(100% - 140px); background: var(--win); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 30px 60px -20px #000; z-index: 8; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
+.panel[hidden] { display: none; }
+.panel header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--win-2); }
+.panel h2 { margin: 0; font-family: var(--font-display); font-size: .9rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.panel h2 span { color: var(--pink); }
+.x { background: none; border: 0; color: var(--muted); font-size: 1.1rem; width: 28px; height: 28px; border-radius: 8px; }
+.x:hover { background: rgba(255,255,255,.06); color: var(--fg); }
+.pbody { padding: 14px; display: grid; gap: 12px; overflow: auto; align-content: start; min-height: 0; }
+@media (max-width: 700px) { .panel { right: 16px; left: 16px; width: auto; bottom: 330px; max-height: calc(100% - 400px); } .bubble { right: 120px; width: 200px; } }
+
+.chatlog { display: grid; gap: 8px; max-height: 300px; overflow: auto; padding-right: 2px; }
+.msg { padding: 9px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.45; max-width: 88%; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.me { justify-self: end; background: rgba(255,92,151,.16); border: 1px solid rgba(255,92,151,.4); border-bottom-right-radius: 4px; }
+.msg.ai { justify-self: start; background: var(--win-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.sys { justify-self: center; font-size: .75rem; color: var(--muted); background: none; padding: 0; }
+.inrow { display: flex; gap: 8px; }
+.inrow input { flex: 1; min-width: 0; }
+input, select { font: inherit; color: var(--fg); background: var(--win-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+input:focus, select:focus { outline: none; border-color: var(--cyan); }
+.btn { border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 600; background: var(--pink); color: #170a12; white-space: nowrap; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--fg); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: .78rem; padding: 5px 10px; border-radius: 999px; background: var(--win-2); border: 1px solid var(--line); color: var(--muted); }
+.chip:hover { border-color: var(--cyan); color: var(--fg); }
+.note { font-size: .76rem; color: var(--muted); margin: 0; }
+
+.clock { font-family: var(--font-mono); font-size: 3rem; font-weight: 600; text-align: center; color: var(--pink); font-variant-numeric: tabular-nums; }
+.seg { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.seg button { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--win-2); font-size: .8rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { border-color: var(--pink); color: var(--fg); }
+.row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.steps li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; background: var(--win-2); border-radius: 10px; padding: 8px 10px; font-size: .86rem; }
+.steps li.done label { text-decoration: line-through; opacity: .55; }
+.steps input { width: 17px; height: 17px; accent-color: var(--pink); padding: 0; }
+.steps .t { font-family: var(--font-mono); font-size: .72rem; color: var(--cyan); }
+
+.moods { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.moods button { padding: 10px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--win-2); font-size: 1.5rem; display: grid; gap: 2px; justify-items: center; }
+.moods button small { font-size: .62rem; color: var(--muted); }
+.moods button:hover { border-color: var(--pink); }
+
+/* status card (xp) */
+.status { position: absolute; top: 52px; right: max(16px, env(safe-area-inset-right, 0px)); width: 220px; background: rgba(21,22,31,.88); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; z-index: 2; backdrop-filter: blur(6px); }
+.status .name { font-family: var(--font-display); font-weight: 900; font-size: .95rem; }
+.status .name b { color: var(--pink); }
+.status .meta { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 7px; border-radius: 99px; background: var(--win-2); overflow: hidden; }
+.bar div { height: 100%; width: 0; background: linear-gradient(90deg, var(--pink), var(--violet), var(--cyan)); transition: width .4s; }
+@media (max-width: 900px) { .status { display: none; } }
+
+.toast { position: absolute; left: 50%; top: 52px; transform: translateX(-50%); background: var(--win); border: 1px solid var(--pink); color: var(--fg); padding: 8px 14px; border-radius: 12px; font-size: .85rem; z-index: 9; box-shadow: 0 0 30px -8px var(--pink); }
+.toast[hidden] { display: none; }
+</style>
+
+<div class="desktop" id="desk">
+  <canvas class="stars" id="stars" aria-hidden="true"></canvas>
+  <div class="proto"><b>Прототип</b> · AstolfoSigma AI для Windows · клікни на персонажа</div>
+
+  <div class="icons" aria-hidden="true">
+    <div class="icon"><i style="background:#2a6df4"></i>Visual Studio</div>
+    <div class="icon"><i style="background:#a259ff"></i>Figma</div>
+    <div class="icon"><i style="background:#5865f2"></i>Discord</div>
+    <div class="icon"><i style="background:#e87d0d"></i>Blender</div>
+  </div>
+
+  <div class="ide" aria-hidden="true">
+    <div class="ide-bar">main_process.py — lab_04_databases<span class="dots"><i></i><i></i><i></i></span></div>
+<pre><span class="c"># Лабораторна №4: робота з БД студентів</span>
+<span class="k">import</span> sqlite3
+
+<span class="k">class</span> <span class="f">StudentRepo</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(self, path=<span class="s">"students.db"</span>):
+        self.conn = sqlite3.connect(path)
+
+    <span class="k">def</span> <span class="f">fetch_all</span>(self):
+        cur = self.conn.execute(<span class="s">"SELECT * FROM students"</span>)
+        <span class="k">return</span> cur.fetchall()
+
+    <span class="k">def</span> <span class="f">add</span>(self, name, group):
+        <span class="c"># TODO: валідація вводу</span>
+        ...
+</pre>
+  </div>
+
+  <aside class="status" aria-label="Прогрес">
+    <div class="name">Сігма<b>-тян</b></div>
+    <div class="meta"><span id="lvl">Рівень 1</span><span id="xpTxt">0 / 100 XP</span></div>
+    <div class="bar"><div id="xpBar"></div></div>
+    <div class="meta"><span>Фокус сьогодні</span><span id="focusToday">0 хв</span></div>
+  </aside>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <!-- panels -->
+  <section class="panel" id="p-chat" hidden aria-label="Чат">
+    <header><h2>Чат із <span>Сігма-тян</span></h2><button class="x" data-close aria-label="Закрити">✕</button></header>
+    <div class="pbody">
+      <div class="chatlog" id="chatlog" aria-live="polite"></div>
+      <div class="chips" id="chips">
+        <button class="chip" type="button">Не можу змусити себе сісти за лабу</button>
+        <button class="chip" type="button">Я боюся сесії</button>
+        <button class="chip" type="button">Похвали мене 🥺</button>
+      </div>
+      <form class="inrow" id="chatForm">
+        <input id="chatIn" type="text" placeholder="Напиши, що на душі…" autocomplete="off" maxlength="400">
+        <button class="btn" id="chatSend" type="submit">Надіслати</button>
+      </form>
+      <p class="note" id="chatNote">Прототип: відповіді з бібліотеки фраз персонажа. У релізі відповідатиме локальна LLM.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-focus" hidden aria-label="Фокус">
+    <header><h2>Фокус-<span>сесія</span></h2><button class="x" data-close aria-label="Закрити">✕</button></header>
+    <div class="pbody">
+      <div class="seg" id="lenSeg">
+        <button type="button" data-min="25" aria-pressed="true">25 хв</button>
+        <button type="button" data-min="15" aria-pressed="false">15 хв</button>
+        <button type="button" data-min="0.25" aria-pressed="false">15 сек (демо)</button>
+      </div>
+      <div class="clock" id="clock">25:00</div>
+      <div class="row">
+        <button class="btn" id="fStart" type="button">Старт</button>
+        <button class="btn ghost" id="fReset" type="button">Скинути</button>
+      </div>
+      <p class="note">Поки йде таймер, Сігма-тян сидить поруч і раз на кілька хвилин підбадьорює. За повну сесію: +50 XP.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-steps" hidden aria-label="Мікрокроки">
+    <header><h2>Мікро<span>кроки</span></h2><button class="x" data-close aria-label="Закрити">✕</button></header>
+    <div class="pbody">
+      <form class="inrow" id="stepForm">
+        <input id="stepIn" type="text" value="Лабораторна №4 з баз даних" maxlength="120" aria-label="Задача">
+        <button class="btn" id="stepBtn" type="submit">Розбити</button>
+      </form>
+      <ul class="steps" id="steps"></ul>
+      <p class="note" id="stepNote">ШІ ділить задачу на кроки по ~15 хвилин. Кожна галочка: +25 XP.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-mood" hidden aria-label="Настрій">
+    <header><h2>Як ти <span>сьогодні?</span></h2><button class="x" data-close aria-label="Закрити">✕</button></header>
+    <div class="pbody">
+      <div class="moods" id="moods">
+        <button type="button" data-m="4">🤩<small>супер</small></button>
+        <button type="button" data-m="3">🙂<small>норм</small></button>
+        <button type="button" data-m="2">😐<small>так собі</small></button>
+        <button type="button" data-m="1">😩<small>втомився</small></button>
+        <button type="button" data-m="0">😭<small>вигорів</small></button>
+      </div>
+      <p class="note">Щоденний чек-ін допомагає помітити вигорання раніше.</p>
+    </div>
+  </section>
+
+  <!-- companion -->
+  <div class="buddy" id="buddy">
+    <div class="bubble" id="bubble"><span class="who">Сігма-тян</span><span id="bubbleTxt">Привіт! Я твоя ШІ-напарниця. Клікни на мене або на кнопки знизу ✨</span></div>
+    <svg viewBox="0 0 210 250" id="buddySvg" role="img" aria-label="Сігма-тян, аніме-компаньйон. Перетягни, щоб перемістити; клікни, щоб поговорити.">
+      <defs>
+        <linearGradient id="hairG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb3d1"/><stop offset=".55" stop-color="#ff6fa6"/><stop offset="1" stop-color="#c08cff"/></linearGradient>
+        <linearGradient id="hairShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2508c"/><stop offset="1" stop-color="#9a6be6"/></linearGradient>
+        <linearGradient id="eyeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1747"/><stop offset=".55" stop-color="#7d3fd1"/><stop offset="1" stop-color="#4fe3de"/></linearGradient>
+        <linearGradient id="hoodG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2d44"/><stop offset="1" stop-color="#1b1c2c"/></linearGradient>
+        <radialGradient id="skinG" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#fff3f1"/><stop offset="1" stop-color="#ffdcd6"/></radialGradient>
+      </defs>
+      <g class="tail"><path d="M150 228 Q190 210 185 175 Q182 160 172 165 Q180 185 150 205 Z" fill="url(#hairG)" opacity=".9"/></g>
+      <g class="body-anim">
+        <!-- back hair -->
+        <path d="M44 92 Q30 170 52 222 L80 214 Q62 170 66 110 Z" fill="url(#hairShade)"/>
+        <path d="M166 92 Q180 170 158 222 L130 214 Q148 170 144 110 Z" fill="url(#hairShade)"/>
+        <!-- hoodie body -->
+        <path d="M50 250 Q52 196 105 188 Q158 196 160 250 Z" fill="url(#hoodG)" stroke="#4fe3de" stroke-width="1.6"/>
+        <path d="M86 192 L105 214 L124 192" fill="none" stroke="#ff5c97" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="96" cy="226" r="2.2" fill="#4fe3de"/><circle cx="114" cy="226" r="2.2" fill="#4fe3de"/>
+        <text x="105" y="244" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="900" font-size="11" fill="#ff5c97">Σ</text>
+        <!-- neck -->
+        <rect x="96" y="172" width="18" height="20" rx="6" fill="#ffd6cf"/>
+        <!-- headphones band -->
+        <path d="M46 96 Q105 20 164 96" fill="none" stroke="#2b2d44" stroke-width="9" stroke-linecap="round"/>
+        <!-- face -->
+        <ellipse cx="105" cy="122" rx="54" ry="56" fill="url(#skinG)"/>
+        <!-- cat-ear headphones -->
+        <path d="M52 64 L42 22 L80 48 Z" fill="url(#hairG)" stroke="#2b2d44" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M158 64 L168 22 L130 48 Z" fill="url(#hairG)" stroke="#2b2d44" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M54 56 L50 36 L68 48 Z" fill="#ffd1e3"/><path d="M156 56 L160 36 L142 48 Z" fill="#ffd1e3"/>
+        <!-- front hair -->
+        <path d="M50 110 Q48 52 105 48 Q162 52 160 110 Q150 84 138 80 Q140 98 128 104 Q126 86 112 80 Q110 100 96 104 Q96 86 82 82 Q80 100 66 106 Q66 92 58 88 Z" fill="url(#hairG)"/>
+        <path d="M104 50 Q112 30 128 34 Q114 38 112 52 Z" fill="url(#hairG)"/>
+        <!-- side locks -->
+        <path d="M52 100 Q40 150 58 176 Q66 150 64 112 Z" fill="url(#hairG)"/>
+        <path d="M158 100 Q170 150 152 176 Q144 150 146 112 Z" fill="url(#hairG)"/>
+        <!-- headphone cups -->
+        <rect x="36" y="100" width="20" height="36" rx="9" fill="#2b2d44" stroke="#4fe3de" stroke-width="2"/>
+        <rect x="154" y="100" width="20" height="36" rx="9" fill="#2b2d44" stroke="#4fe3de" stroke-width="2"/>
+        <circle cx="46" cy="118" r="3" fill="#ff5c97"/><circle cx="164" cy="118" r="3" fill="#ff5c97"/>
+        <!-- blush -->
+        <ellipse cx="74" cy="142" rx="9" ry="4.5" fill="#ff8fb4" opacity=".55"/>
+        <ellipse cx="136" cy="142" rx="9" ry="4.5" fill="#ff8fb4" opacity=".55"/>
+
+        <!-- EYES: normal -->
+        <g class="face on" data-face="happy neutral think">
+          <g class="blink">
+            <ellipse cx="82" cy="124" rx="11" ry="14" fill="#fff"/>
+            <ellipse cx="82" cy="126" rx="9" ry="12" fill="url(#eyeG)"/>
+            <circle cx="78" cy="120" r="3.6" fill="#fff"/><circle cx="86" cy="131" r="1.6" fill="#fff"/>
+            <path d="M69 112 Q82 104 95 112" stroke="#3a2350" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+          <g class="blink">
+            <ellipse cx="128" cy="124" rx="11" ry="14" fill="#fff"/>
+            <ellipse cx="128" cy="126" rx="9" ry="12" fill="url(#eyeG)"/>
+            <circle cx="124" cy="120" r="3.6" fill="#fff"/><circle cx="132" cy="131" r="1.6" fill="#fff"/>
+            <path d="M115 112 Q128 104 141 112" stroke="#3a2350" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+        </g>
+        <!-- EYES: joy ^ ^ -->
+        <g class="face" data-face="joy">
+          <path d="M70 128 Q82 112 94 128" stroke="#3a2350" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M116 128 Q128 112 140 128" stroke="#3a2350" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- EYES: sad -->
+        <g class="face" data-face="sad">
+          <ellipse cx="82" cy="128" rx="9" ry="11" fill="url(#eyeG)"/><circle cx="79" cy="123" r="3" fill="#fff"/>
+          <ellipse cx="128" cy="128" rx="9" ry="11" fill="url(#eyeG)"/><circle cx="125" cy="123" r="3" fill="#fff"/>
+          <path d="M70 112 Q82 116 94 108" stroke="#3a2350" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M116 108 Q128 116 140 112" stroke="#3a2350" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M92 138 Q90 146 94 150 Q98 146 96 140 Z" fill="#7fe6ff"/>
+        </g>
+
+        <!-- MOUTHS -->
+        <path class="face on" data-face="happy" d="M96 150 Q105 160 114 150" stroke="#8a2f52" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path class="face" data-face="joy" d="M94 148 Q105 166 116 148 Z" fill="#c43b6c" stroke="#8a2f52" stroke-width="2" stroke-linejoin="round"/>
+        <path class="face" data-face="neutral" d="M99 153 L111 153" stroke="#8a2f52" stroke-width="3" stroke-linecap="round"/>
+        <path class="face" data-face="sad" d="M97 157 Q105 150 113 157" stroke="#8a2f52" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <g class="face" data-face="think"><circle cx="110" cy="154" r="4" fill="#c43b6c"/><text x="150" y="80" font-size="22" font-family="Inter" fill="#4fe3de">?</text></g>
+      </g>
+    </svg>
+    <div class="dock">
+      <button type="button" data-open="p-chat" aria-pressed="false" title="Чат" aria-label="Чат">💬</button>
+      <button type="button" data-open="p-focus" aria-pressed="false" title="Фокус-сесія" aria-label="Фокус-сесія">⏱️</button>
+      <button type="button" data-open="p-steps" aria-pressed="false" title="Мікрокроки" aria-label="Мікрокроки">🧩</button>
+      <button type="button" data-open="p-mood" aria-pressed="false" title="Настрій" aria-label="Настрій">💗</button>
+      <button type="button" id="voiceBtn" aria-pressed="false" title="Озвучка" aria-label="Озвучка" hidden>🔈</button>
+    </div>
+  </div>
+
+  <div class="taskbar">
+    <div class="tb-start">Σ</div>
+    <div class="tb-app on">VS Code</div>
+    <div class="tb-app hide-sm">Discord</div>
+    <div class="tb-app hide-sm">Chrome</div>
+    <div class="tb-app on" style="border-color:var(--cyan)">✨ AstolfoSigma AI</div>
+    <div class="tb-clock" id="tbClock">--:--</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var buddy = $("buddy"), svg = $("buddySvg"), bubble = $("bubble"), bubbleTxt = $("bubbleTxt");
+
+  /* ---------- state ---------- */
+  var xp = 0, level = 1, focusMin = 0, tts = null, voiceOn = false;
+
+  /* ---------- faces & speech ---------- */
+  function face(name) {
+    svg.querySelectorAll(".face").forEach(function (el) {
+      var list = (el.getAttribute("data-face") || "").split(" ");
+      el.classList.toggle("on", list.indexOf(name) !== -1);
+    });
+  }
+  var sayTimer = null;
+  function say(text, mood, ms) {
+    bubble.hidden = false;
+    bubbleTxt.textContent = text;
+    face(mood || "happy");
+    if (sayTimer) clearTimeout(sayTimer);
+    if (ms !== 0) sayTimer = setTimeout(function () { face("happy"); }, ms || 6000);
+    if (voiceOn && tts) tts.speak(text, { voice: "airy", language: "uk" }).catch(function () {});
+  }
+  function hop() { buddy.classList.remove("hop"); void buddy.offsetWidth; buddy.classList.add("hop"); }
+  function toast(t) { var el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { el.hidden = true; }, 2600); }
+
+  /* ---------- XP ---------- */
+  function addXp(n, why) {
+    xp += n;
+    var leveled = false;
+    while (xp >= 100) { xp -= 100; level++; leveled = true; }
+    $("lvl").textContent = "Рівень " + level;
+    $("xpTxt").textContent = xp + " / 100 XP";
+    $("xpBar").style.width = xp + "%";
+    toast("+" + n + " XP · " + why);
+    if (leveled) { hop(); say("Рівень " + level + "! Ти прокачуєшся швидше, ніж мій персонаж у гачі 🎉", "joy"); }
+  }
+
+  /* ---------- panels ---------- */
+  var dockBtns = document.querySelectorAll(".dock [data-open]");
+  function openPanel(id) {
+    document.querySelectorAll(".panel").forEach(function (p) { p.hidden = p.id !== id || !p.hidden; });
+    dockBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-open") === id && !$(id).hidden)); });
+    if (!$(id).hidden) {
+      var first = $(id).querySelector("input, .seg button, .moods button");
+      if (first) first.focus();
+      if (id === "p-chat" && !$("chatlog").children.length) addMsg("ai", "Привіт-привіт! Як справи з навчанням? Можеш поскаржитися, я не засуджую 💗");
+    }
+  }
+  dockBtns.forEach(function (b) { b.addEventListener("click", function () { openPanel(b.getAttribute("data-open")); }); });
+  document.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", function () { b.closest(".panel").hidden = true; dockBtns.forEach(function (d) { d.setAttribute("aria-pressed", "false"); }); }); });
+
+  /* ---------- drag + click ---------- */
+  var drag = null;
+  svg.addEventListener("pointerdown", function (e) {
+    var r = buddy.getBoundingClientRect(), d = $("desk").getBoundingClientRect();
+    drag = { x: e.clientX, y: e.clientY, left: r.left - d.left, top: r.top - d.top, moved: false };
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
+    if (!drag.moved) return;
+    buddy.classList.add("dragging");
+    var d = $("desk").getBoundingClientRect();
+    var L = Math.max(0, Math.min(d.width - 210, drag.left + dx));
+    var T = Math.max(40, Math.min(d.height - 300, drag.top + dy));
+    buddy.style.left = L + "px"; buddy.style.top = T + "px"; buddy.style.right = "auto"; buddy.style.bottom = "auto";
+  });
+  svg.addEventListener("pointerup", function () {
+    if (!drag) return;
+    buddy.classList.remove("dragging");
+    if (!drag.moved) { hop(); pokes(); }
+    else say("Ой, переїжджаємо! Тут теж затишно ✨", "joy", 3000);
+    drag = null;
+  });
+  var pokeLines = [
+    ["Хі-хі, лоскотно! Відкрити чат? 💬", "joy"],
+    ["Я тут! Може, 15 хвилин фокусу разом?", "happy"],
+    ["Ти сьогодні вже пив воду? Я стежу 👀", "think"],
+    ["Тиць-тиць! Розбити задачу на кроки?", "joy"]
+  ];
+  var pokeI = 0;
+  function pokes() { var l = pokeLines[pokeI++ % pokeLines.length]; say(l[0], l[1], 4000); }
+  svg.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel("p-chat"); } });
+  svg.setAttribute("tabindex", "0");
+
+  /* ---------- chat ---------- */
+  var turns = [];
+  var replies = [
+    [/прокраст|не можу змусити|лінь|відклада|сісти за/i, [
+      "Розумію тебе 💗 Давай почнемо з дуже маленького: відкрий файл і напиши один коментар, що треба зробити. Це 5 хвилин.",
+      "Прокрастинація — це не лінь, а страх великої задачі. Розіб'ємо її на мікрокроки? Натисни 🧩",
+      "Домовимось: лише 10 хвилин, а потім можеш зупинитися. Зазвичай після старту йде легше ✨"]],
+    [/сесі|екзамен|залік|боюся|страшно|тривог/i, [
+      "Сесія лякає, коли вона одна велика гора. Розіб'ємо її на мікрокроки, і гора стане сходинками ✨",
+      "Страх перед сесією — нормально. Давай складемо план на сьогодні: одна тема, дві фокус-сесії ⏱️",
+      "Ти вже стільки всього здав. І цю впораєш, я поруч 💪"]],
+    [/похвал|молодець|🥺|підтрим/i, [
+      "Ти зробив більше, ніж думаєш. Похвала від мене: ти чудовий студент і ще кращий тиммейт 🌸",
+      "Офіційно заявляю: ти молодець! +100 до мотивації 🎉",
+      "Я пишаюся тобою. Навіть те, що ти сьогодні тут — вже крок 💗"]],
+    [/втом|сил нема|вигор|сумно|погано/i, [
+      "Обіймаю 🫂 Може, спершу вода і 5 хвилин без екрана? Відпочинок — теж частина навчання.",
+      "Ти втомився, і це нормально. Сьогодні достатньо одного маленького кроку 🌙",
+      "Якщо важко вже довго, поговори з близькими або психологом універу. А я поруч 💗"]],
+    [/код|баг|помилк|python|sql|лаб/i, [
+      "Баги — це просто квести 🐛 Почни з тексту помилки: що саме він каже?",
+      "Спробуй пояснити код мені вголос, як качечці. Часто відповідь знаходиться сама 🦆",
+      "Розбий лабу на кроки: модель даних → запити → перевірка. Почнемо з першого?"]],
+    [/привіт|хай|йо|hello|hi/i, [
+      "Привіт-привіт! Готовий трохи повчитися разом? ✨",
+      "Хай! Я вже чекала на тебе. Що сьогодні робимо? 💗"]]
+  ];
+  var generic = [
+    "Цікаво! Розкажи ще трохи? А поки — може, 15 хвилин фокусу разом? ⏱️",
+    "Я тебе чую 💗 Що зараз найважче: почати, зосередитися чи закінчити?",
+    "Запишу собі! А ти не забувай про воду і перерви 💧"
+  ];
+  var rI = 0;
+  function pickReply(text) {
+    for (var i = 0; i < replies.length; i++) if (replies[i][0].test(text)) { var l = replies[i][1]; return l[rI++ % l.length]; }
+    return generic[rI++ % generic.length];
+  }
+  function addMsg(who, text) {
+    var m = document.createElement("div");
+    m.className = "msg " + who; m.textContent = text;
+    $("chatlog").appendChild(m); $("chatlog").scrollTop = 1e6;
+    return m;
+  }
+  var chatCtl = null;
+  async function send(text) {
+    text = text.trim(); if (!text) return;
+    addMsg("me", text); $("chatIn").value = "";
+    var out = addMsg("ai", "…"); face("think"); $("chatSend").disabled = true;
+    await new Promise(function (r) { setTimeout(r, 700 + Math.random() * 600); });
+    var t = pickReply(text);
+    out.textContent = t;
+    say(t, /🫂|втом|сумно/i.test(t) ? "sad" : "happy");
+    $("chatSend").disabled = false;
+  }
+  $("chatForm").addEventListener("submit", function (e) { e.preventDefault(); send($("chatIn").value); });
+  $("chips").addEventListener("click", function (e) { if (e.target.matches(".chip")) send(e.target.textContent); });
+
+  /* ---------- focus timer ---------- */
+  var lenMin = 25, left = 25 * 60, tick = null, elapsed = 0;
+  var cheers = ["Так тримати! Я поруч 💪", "Половина позаду, ти неймовірний ✨", "Ще трішки, і заслужена перерва ☕", "Фокус-режим: активовано. Я тихенько сиджу поруч 🤫"];
+  function drawClock() { $("clock").textContent = String(Math.floor(left / 60)).padStart(2, "0") + ":" + String(Math.floor(left % 60)).padStart(2, "0"); }
+  $("lenSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || tick) return;
+    $("lenSeg").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    lenMin = parseFloat(b.getAttribute("data-min")); left = Math.round(lenMin * 60); drawClock();
+  });
+  $("fStart").addEventListener("click", function () {
+    if (tick) { clearInterval(tick); tick = null; $("fStart").textContent = "Продовжити"; say("Пауза! Розімни плечі 🙆", "neutral"); return; }
+    $("fStart").textContent = "Пауза";
+    say(cheers[3], "happy", 4000);
+    var total = Math.round(lenMin * 60), cheerEvery = Math.max(5, Math.floor(total / 3));
+    tick = setInterval(function () {
+      left--; elapsed++; drawClock();
+      if (elapsed % 60 === 0) { focusMin++; $("focusToday").textContent = focusMin + " хв"; }
+      if (left > 0 && (total - left) % cheerEvery === 0) say(cheers[Math.floor(Math.random() * 3)], "happy", 4000);
+      if (left <= 0) {
+        clearInterval(tick); tick = null; left = total; drawClock(); $("fStart").textContent = "Старт";
+        hop(); say("Сесію завершено! Ти неймовірний 🎉 Тепер 5 хвилин перерви, наказ ШІ.", "joy", 7000);
+        addXp(50, "фокус-сесія");
+      }
+    }, 1000);
+  });
+  $("fReset").addEventListener("click", function () { clearInterval(tick); tick = null; left = Math.round(lenMin * 60); drawClock(); $("fStart").textContent = "Старт"; });
+
+  /* ---------- micro steps ---------- */
+  var defaultSteps = ["Відкрити завдання й виписати вимоги", "Підготувати проєкт і файли", "Зробити найпростішу частину", "Основна частина: перший блок", "Основна частина: другий блок", "Перевірити й виправити помилки", "Оформити звіт і здати"];
+  function renderSteps(list) {
+    var ul = $("steps"); ul.innerHTML = "";
+    list.forEach(function (s, i) {
+      var li = document.createElement("li");
+      var cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "st" + i;
+      var lb = document.createElement("label"); lb.htmlFor = cb.id; lb.textContent = s.step || s;
+      var t = document.createElement("span"); t.className = "t"; t.textContent = (s.min || 15) + " хв";
+      cb.addEventListener("change", function () {
+        li.classList.toggle("done", cb.checked);
+        if (cb.checked) {
+          addXp(25, "крок виконано");
+          var done = ul.querySelectorAll("input:checked").length, all = ul.children.length;
+          if (done === all) { hop(); say("Усі кроки готові! Ти закрив задачу, пишаюся тобою 🥹✨", "joy", 7000); }
+          else say(done + " з " + all + "! Наступний крок уже не страшний 💪", "happy", 3500);
+        }
+      });
+      li.append(cb, lb, t); ul.appendChild(li);
+    });
+  }
+  $("stepForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var task = $("stepIn").value.trim(); if (!task) return;
+    $("stepBtn").disabled = true; face("think"); say("Хм-м, зараз розкладу по поличках…", "think", 0);
+    await new Promise(function (r) { setTimeout(r, 900); });
+    var plan = defaultSteps;
+    if (/презентац|слайд|pitch/i.test(task)) plan = ["Виписати головну думку в одне речення", "Скласти структуру слайдів", "Зібрати факти й картинки", "Зробити перші 3 слайди", "Доробити решту слайдів", "Прогнати виступ уголос"];
+    else if (/есе|реферат|курсов|звіт|текст/i.test(task)) plan = ["Записати тему й вимоги", "Знайти 3 джерела", "Скласти план розділів", "Написати чернетку вступу", "Написати основну частину", "Висновки й вичитка"];
+    else if (/макет|дизайн|figma|blender|модел/i.test(task)) plan = ["Зібрати референси", "Зробити швидкий ескіз", "Задати сітку й кольори", "Опрацювати головний екран", "Деталі та поліровка", "Експорт і здача"];
+    renderSteps(plan);
+    say("Готово! Почнемо з першого кроку, він найлегший 🌸", "joy", 5000);
+    $("stepBtn").disabled = false;
+  });
+  renderSteps(defaultSteps);
+
+  /* ---------- mood ---------- */
+  var moodLines = {
+    4: ["Ура! Твій настрій заряджає й мене ⚡ Використаємо його на складну задачу?", "joy"],
+    3: ["Норм: це теж добре! Тримаємо рівний темп 🙂", "happy"],
+    2: ["Так собі буває. Давай почнемо з чогось крихітного, на 10 хвилин?", "neutral"],
+    1: ["Ти втомився, і це нормально. Може, коротка перерва й вода спершу? 💧", "sad"],
+    0: ["Обіймаю тебе 🫂 Сьогодні без подвигів: один маленький крок або відпочинок. Якщо важко довго, поговори з близькими чи психологом універу.", "sad"]
+  };
+  $("moods").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    var l = moodLines[b.getAttribute("data-m")]; say(l[0], l[1], 8000); addXp(10, "чек-ін настрою");
+  });
+
+  /* ---------- voice (optional) ---------- */
+  $("voiceBtn").addEventListener("click", function () {
+    voiceOn = !voiceOn; this.setAttribute("aria-pressed", String(voiceOn)); this.textContent = voiceOn ? "🔊" : "🔈";
+    if (voiceOn && tts) tts.speak("Озвучку увімкнено!", { voice: "airy", language: "uk" }).catch(function () {});
+    else if (tts) tts.stop();
+  });
+
+  /* ---------- clock, stars ---------- */
+  function clock() { var d = new Date(); $("tbClock").textContent = d.toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" }) + "\n" + d.toLocaleDateString("uk-UA"); }
+  clock(); setInterval(clock, 15000);
+  (function stars() {
+    var c = $("stars"), ctx = c.getContext("2d");
+    function draw() {
+      c.width = c.clientWidth; c.height = c.clientHeight;
+      for (var i = 0; i < 90; i++) {
+        ctx.fillStyle = "rgba(255,255,255," + (Math.random() * .5 + .1) + ")";
+        ctx.beginPath(); ctx.arc(Math.random() * c.width, Math.random() * c.height * .8, Math.random() * 1.3, 0, 7); ctx.fill();
+      }
+    }
+    draw(); window.addEventListener("resize", draw);
+  })();
+
+  /* idle chatter */
+  var idle = ["Не забудь розім'ятися 🙆", "Я вірю в тебе! Навіть у TODO на рядку 14 👀", "Може, 15 хвилин фокусу разом? ⏱️", "Пам'ятаєш про воду? 💧"];
+  var idleI = 0;
+  setInterval(function () { if (!tick && document.querySelectorAll(".panel:not([hidden])").length === 0) say(idle[idleI++ % idle.length], "happy", 5000); }, 45000);
+
+})();
+</script>
+</body></html>
